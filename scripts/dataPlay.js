@@ -1,4 +1,4 @@
-//adapted from https://editor.p5js.org/a2zitp/sketches/ZaehMFonQ
+//adapted from https://editor.p5js.org/a2zitp/sketches/ANn4gUQfP
 
 
 let cSize =20;
@@ -10,7 +10,10 @@ let crayola;
 let umapResults;
 // UMAP instance
 let umap;
-
+// Boolean to check if UMAP is currently processing
+let isUMAPRunning = false;
+// Sliders for UMAP parameters
+let nNeighborsSlider, minDistSlider;
 function preload() {
   // Load color data from a JSON file
   crayola = loadJSON('scripts/crayola.json');
@@ -28,45 +31,61 @@ function setup() {
     data.push([red(crayolaColor), green(crayolaColor), blue(crayolaColor)]);
   }
 
-  // Set a random seed for reproducible results
-  randomSeed(1);
+  // Create a slider to adjust the number of neighbors in UMAP
+  nNeighborsSlider = createSlider(1, 50, 15);
+  // Rerun UMAP whenever the slider value changes
+  nNeighborsSlider.input(runUMAP);
+  nNeighborsSlider.class('slider');
+  // Create a slider to adjust the minimum distance in UMAP
+  minDistSlider = createSlider(0, 1, 0.1, 0.01);
+  // Rerun UMAP whenever the slider value changes
+  minDistSlider.class('slider');
+  minDistSlider.input(runUMAP);
 
-  // Initialize UMAP with specified parameters
-  umap = new UMAP({
-    nNeighbors: 15,
-    minDist: 0.1,
-    nComponents: 2,
-    random: random, // Use p5.js random function
-  });
 
-  // Fit the UMAP model with the color data
-  umapResults = umap.fit(data);
+  // Run UMAP initially with default slider values
+  runUMAP();
 }
 
 function draw() {
-  // Clear the canvas
+  // Set background color
   background(255);
-  noStroke();
 
-  // Determine the bounds for the UMAP results
-  let maxW = 0;
-  let minW = Infinity;
-  let maxH = 0;
-  let minH = Infinity;
-  for (let i = 0; i < umapResults.length; i++) {
-    maxW = max(maxW, umapResults[i][0]);
-    minW = min(minW, umapResults[i][0]);
-    maxH = max(maxH, umapResults[i][1]);
-    minH = min(minH, umapResults[i][1]);
+  // Process UMAP in each draw cycle
+  for (let i = 0; i < 100; i++) {
+    if (isUMAPRunning) {
+      let result = umap.step();
+      isUMAPRunning = result;
+    }
   }
 
-  // Draw the UMAP results on the canvas
-  for (let i = 0; i < umapResults.length; i++) {
-    // Set the fill color based on the original data
+  // Draw the UMAP embedding on the canvas
+  drawEmbedding();
+}
+
+// Function to initialize and run UMAP with current slider values
+function runUMAP() {
+  umap = new UMAP({
+    nNeighbors: nNeighborsSlider.value(),
+    minDist: minDistSlider.value(),
+    nComponents: 2,
+  });
+  umap.initializeFit(data);
+  isUMAPRunning = true;
+}
+
+// Function to draw the UMAP embedding as circles on the canvas
+function drawEmbedding() {
+  noStroke();
+  // Retrieve the current embedding from UMAP
+  let embedding = umap.getEmbedding();
+  for (let i = 0; i < embedding.length; i++) {
+    let data2D = embedding[i];
+    // Use the original color data for each point
     fill(data[i][0], data[i][1], data[i][2]);
     // Map the 2D UMAP output to canvas coordinates
-    let x = map(umapResults[i][0], minW, maxW, 10, width - 10);
-    let y = map(umapResults[i][1], minH, maxH, 10, height - 10);
+    let x = map(data2D[0], -10, 10, 0, width);
+    let y = map(data2D[1], -10, 10, 0, height);
     // Draw a circle for each data point
     if(toucher(x,y)){
       cSize=40;
@@ -78,7 +97,6 @@ function draw() {
       cSize=20;
     }
     circle(x, y,cSize);
-    
   }
 }
 

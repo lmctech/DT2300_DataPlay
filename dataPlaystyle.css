@@ -9,3 +9,10 @@ canvas {
   z-index: -1;
   max-width: 100%;
 }
+
+.slider{ 
+  width: 20vw; 
+  background: #04AA6D;
+  cursor: pointer;
+  margin: 20px;
+}
