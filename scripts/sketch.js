@@ -1,6 +1,7 @@
 //adapted from https://editor.p5js.org/a2zitp/sketches/ZaehMFonQ
 
 
+let cSize =20;
 // Data array for storing color information
 let data = [];
 // Variable to hold color data from JSON
@@ -15,7 +16,6 @@ function preload() {
   crayola = loadJSON('scripts/crayola.json');
 }
 
-let cSize =20;
 function setup() {
   // Set up the canvas
   let myCanvas = createCanvas(windowWidth, windowHeight);
@@ -81,6 +81,7 @@ function draw() {
     
   }
 }
+
 
 function toucher(x,y)
 {
